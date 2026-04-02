@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, Vibration } from 'react-native';
 import GradientBackground from '@/components/gradient-background-wrapper-component';
 import useStyles from '@/hooks/theme/useStyes';
 import RNBounceable from '@freakycoder/react-native-bounceable';
@@ -7,11 +7,22 @@ import { AppNavigationProps } from '@/navigator/navigation';
 import CountDownComponent from '@/components/count-down-component';
 import RoundedButtonComponent from '@/components/rounded-button-component';
 import { ProgressBar } from 'react-native-paper';
+import Timing from '@/components/timing-component';
+
+const ONE_SECOND_IN_MS = 1000;
+const PATTERN = [
+  1 * ONE_SECOND_IN_MS,
+  1 * ONE_SECOND_IN_MS,
+  1 * ONE_SECOND_IN_MS,
+  1 * ONE_SECOND_IN_MS,
+  1 * ONE_SECOND_IN_MS,
+];
 
 const Timer = ({ navigation, route }: AppNavigationProps<'Timer'>) => {
-  const { currentSubject } = route.params;
+  const { currentSubject, clearSubjects } = route.params;
   const [isStarted, setIsStarted] = React.useState(false);
   const [progress, setProgress] = React.useState(1);
+  const [minutes, setMinutes] = React.useState(0.1);
   const { styles } = useStyles(t => ({
     container: {
       flex: 1,
@@ -66,6 +77,7 @@ const Timer = ({ navigation, route }: AppNavigationProps<'Timer'>) => {
     },
     buttonContainer: {
       ...t.layout.center,
+      flex: 0.6,
     },
     focusingContainer: {
       justifyContent: 'center',
@@ -88,7 +100,29 @@ const Timer = ({ navigation, route }: AppNavigationProps<'Timer'>) => {
       height: 10,
       borderRadius: 3,
     },
+    timingContainer: {
+      flex: 0.4,
+      flexDirection: 'row',
+    },
+    clearBtnWrapper: {
+      flex: 0.6,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      paddingBottom: 100,
+    },
   }));
+
+  const handleClearSubjects = useCallback(() => {
+    clearSubjects('');
+    navigation.goBack();
+  }, [clearSubjects, navigation]);
+
+  const onEnd = () => {
+    Vibration.vibrate(PATTERN);
+    // reset();
+    setIsStarted(false);
+    setProgress(1);
+  };
 
   return (
     <GradientBackground>
@@ -106,9 +140,9 @@ const Timer = ({ navigation, route }: AppNavigationProps<'Timer'>) => {
         <View style={styles.countDownContainer}>
           <CountDownComponent
             isPaused={!isStarted}
-            onEnd={() => {}}
-            onProgress={p => setProgress(p)}
-            minutes={0.1}
+            onEnd={onEnd}
+            onProgress={setProgress}
+            minutes={minutes}
           />
         </View>
         {/* Focusing container */}
@@ -125,26 +159,40 @@ const Timer = ({ navigation, route }: AppNavigationProps<'Timer'>) => {
             color={styles.progress.color}
           />
         </View>
-        {/* start button */}
-        <View style={styles.buttonContainer}>
-          {!isStarted ? (
-            <RoundedButtonComponent
-              btnTitle="Start"
-              size={100}
-              onPress={() => setIsStarted(true)}
-              style={styles.buttonStyle}
-              textStyle={styles.buttonTextStyle}
-            />
-          ) : (
-            <RoundedButtonComponent
-              btnTitle="Pause"
-              size={100}
-              onPress={() => setIsStarted(false)}
-              style={styles.buttonStyle}
-              textStyle={styles.buttonTextStyle}
-            />
-          )}
-        </View>
+      </View>
+      {/*  add custom timer */}
+      <View style={styles.timingContainer}>
+        <Timing onChange={setMinutes} />
+      </View>
+      {/* start button */}
+      <View style={styles.buttonContainer}>
+        {!isStarted ? (
+          <RoundedButtonComponent
+            btnTitle="Start"
+            size={120}
+            onPress={() => setIsStarted(true)}
+            style={styles.buttonStyle}
+            textStyle={styles.buttonTextStyle}
+          />
+        ) : (
+          <RoundedButtonComponent
+            btnTitle="Pause"
+            size={120}
+            onPress={() => setIsStarted(false)}
+            style={styles.buttonStyle}
+            textStyle={styles.buttonTextStyle}
+          />
+        )}
+      </View>
+      {/* clear button */}
+      <View style={styles.clearBtnWrapper}>
+        <RoundedButtonComponent
+          btnTitle="Clear"
+          size={90}
+          style={styles.buttonStyle}
+          textStyle={styles.buttonTextStyle}
+          onPress={handleClearSubjects}
+        />
       </View>
     </GradientBackground>
   );

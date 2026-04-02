@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Text } from 'react-native';
 import UtilsMethods from '@/utils/index';
 import useStyles from '@/hooks/theme/useStyes';
@@ -6,8 +6,8 @@ import useStyles from '@/hooks/theme/useStyes';
 interface CountDownComponentProps {
   minutes: number;
   isPaused: boolean;
-  onProgress?: (progress: number) => void;
-  onEnd?: () => void;
+  onProgress: (progress: number) => void;
+  onEnd: () => void;
 }
 
 const CountDownComponent: React.FC<CountDownComponentProps> = ({
@@ -18,28 +18,28 @@ const CountDownComponent: React.FC<CountDownComponentProps> = ({
 }) => {
   const interval = React.useRef<number | null>(null);
   // initialize millis from minutes so the component can render a value immediately
-  const [millis, setMillis] = React.useState<number>(
-    UtilsMethods.minutesToMs(minutes),
-  );
+  const [millis, setMillis] = React.useState<number | null>(null);
 
   const countDown = React.useCallback(() => {
-    setMillis((time: number) => {
-      if (time === 0) {
+    setMillis(time => {
+      if (time === null) return null;
+      if (time <= 0) {
         if (interval.current) clearInterval(interval.current);
-        onEnd?.();
-        return time;
+        const newtime = UtilsMethods.minutesToMs(minutes);
+        onEnd();
+        return newtime;
       }
-      const timeLeft = Math.max(0, time - 1000);
-      return timeLeft;
+      return time - 1000;
     });
-  }, [onEnd]);
+  }, [minutes, onEnd]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setMillis(UtilsMethods.minutesToMs(minutes));
   }, [minutes]);
 
   React.useEffect(() => {
-    onProgress?.(millis / UtilsMethods.minutesToMs(minutes));
+    if (millis === null) return;
+    onProgress(millis / UtilsMethods.minutesToMs(minutes));
   }, [millis, minutes, onProgress]);
 
   React.useEffect(() => {
@@ -51,8 +51,9 @@ const CountDownComponent: React.FC<CountDownComponentProps> = ({
     return () => clearInterval(interval.current!);
   }, [countDown, isPaused]);
 
-  const minute = Math.floor((millis / 1000 / 60) % 60);
-  const seconds = Math.floor((millis / 1000) % 60);
+  const safeMillis = millis ?? 0;
+  const minute = Math.floor((safeMillis / 1000 / 60) % 60);
+  const seconds = Math.floor((safeMillis / 1000) % 60);
 
   const { styles } = useStyles(t => {
     return {
