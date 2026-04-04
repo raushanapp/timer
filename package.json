@@ -20,6 +20,7 @@
     "@react-navigation/native": "^7.1.19",
     "@react-navigation/native-stack": "^7.6.2",
     "@react-navigation/stack": "^7.6.2",
+    "expo-keep-awake": "^55.0.6",
     "react": "19.1.1",
     "react-native": "0.82.1",
     "react-native-file-access": "^3.2.0",

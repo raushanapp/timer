@@ -8,6 +8,7 @@ import CountDownComponent from '@/components/count-down-component';
 import RoundedButtonComponent from '@/components/rounded-button-component';
 import { ProgressBar } from 'react-native-paper';
 import Timing from '@/components/timing-component';
+import { useKeepAwake } from 'expo-keep-awake';
 
 const ONE_SECOND_IN_MS = 1000;
 const PATTERN = [
@@ -19,6 +20,7 @@ const PATTERN = [
 ];
 
 const Timer = ({ navigation, route }: AppNavigationProps<'Timer'>) => {
+  useKeepAwake();
   const { currentSubject, clearSubjects } = route.params;
   const [isStarted, setIsStarted] = React.useState(false);
   const [progress, setProgress] = React.useState(1);
